@@ -21,6 +21,8 @@ OS: Window 10
 
 방법2. `python main.py -n 2` (2개 프로세스 사용)
 
+방법3. `python main.py -c 005930` (종목코드=005930만 크롤링)
+
 ## 생각
 requests.get() 응답을 기다리는데에 대부분의 시간이 소요됨.  
 -> async requests가 더 좋을까??(e.g. grequests,  requests-futures ...)  
