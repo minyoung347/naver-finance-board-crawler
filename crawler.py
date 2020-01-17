@@ -82,7 +82,6 @@ class Crawler:
                 posts['view'] = post_info[1]
                 posts['agree'] = post_info[3]
                 posts['disagree'] = post_info[5]
-                posts['opinion'] = post_info[7]
                 posts['content'] = content
                 return posts
 
@@ -133,7 +132,6 @@ class Crawler:
         df.date = pd.to_datetime(df.date)
         df.sort_values(by='nid', inplace=True)
         df.set_index('nid', inplace=True)
-        df['opinion'].replace('의견없음', 0, inplace=True)
 
         print('\r' + code + ': Done.', end=' ')
         return df
@@ -160,13 +158,17 @@ class Crawler:
             return True
 
     def fetch_one(self, code):
+        """
+        하나의 종목코드에 대해 종목 토론실 게시글 모두 크롤링하는 메소드.
+        :output: data/*.db
+        """
         print(code, end=' ')
         if self.is_up_to_date(code):
             print('\r'+code+': Already up-to-date')
         else:
             t = time.time()
             df = self.fetch_by_code(code)
-            print('({:.2f}sec)                 '.format(time.time() - t))
+            print('({:.2f}sec)'.format(time.time() - t)+' '*30)
             self.db.write(code, df)
             del df
 
@@ -176,14 +178,14 @@ class Crawler:
         :output: data/*.db
         """
         for i, code in enumerate(sorted(self.stock_df['종목코드'])):
-            print(code, end=': ')
+            print('{:>4}/{:>4} {}'.format(i+1, len(self.stock_df), code), end=': ')
             if self.is_up_to_date(code):
                 print('\r' + code + ': Already up-to-date')
                 continue
             try:
                 t = time.time()
                 df = self.fetch_by_code(code)
-                print('({:.2f}sec)                 '.format(time.time() - t))
+                print('({:.2f}sec)'.format(time.time() - t)+' '*30)
                 self.db.write(code, df)
                 del df
             except:
