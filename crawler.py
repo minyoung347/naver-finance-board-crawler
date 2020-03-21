@@ -10,7 +10,10 @@ import multiprocessing
 from db_manager import DB_manager
 
 BASE_URL = 'https://finance.naver.com'
-
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36', 
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 
+          'Accept-Encoding': 'gzip', 
+          'Accept-Language': 'ko'}
 
 class Crawler:
     def __init__(self, n_process):
@@ -33,8 +36,9 @@ class Crawler:
             'fiscalYearEnd': 'all',  # 결산월: 전체
             'location': 'all',  # 지역: 전체
         }
+        
 
-        r = requests.post(url, data=data)
+        r = requests.post(url, data=data, headers=HEADERS)
         f = io.BytesIO(r.content)
         dfs = pd.read_html(f, header=0, parse_dates=['상장일'])
         df = dfs[0].copy()
@@ -56,12 +60,12 @@ class Crawler:
             # print(BASE_URL + '/item/board.nhn?code=' + code + '&page=%d' % page, flush=True)
             msg = 'cur_page={}'.format(page)
             print(msg, end=len(msg)*'\b', flush=True)
-            req = requests.get(BASE_URL + '/item/board.nhn?code=' + code + '&page=%d' % page)
+            req = requests.get(BASE_URL + '/item/board.nhn?code=' + code + '&page=%d' % page, headers=HEADERS)
             page_soup = BeautifulSoup(req.text, 'lxml')
             title_atags = page_soup.select('td.title > a')
 
             def fetch_by_post(title_atag):
-                req = requests.get(BASE_URL + title_atag.get('href'))
+                req = requests.get(BASE_URL + title_atag.get('href'), headers=HEADERS)
                 content_soup = BeautifulSoup(req.text, 'lxml')
 
                 date = content_soup.select_one('tr > th.gray03.p9.tah').text
@@ -109,7 +113,7 @@ class Crawler:
         :param code: 종목코드
         :return: DB 저장 형식의 pd.DataFrame()
         """
-        req = requests.get(BASE_URL + '/item/board.nhn?code=' + code)
+        req = requests.get(BASE_URL + '/item/board.nhn?code=' + code, headers=HEADERS)
         page_soup = BeautifulSoup(req.text, 'lxml')
         total_page_num = page_soup.select_one('tr > td.pgRR > a')
         if total_page_num is not None:
@@ -144,7 +148,7 @@ class Crawler:
 
         주의!: 최신글이 답변글인 경우, 글이 게시판 최상단에 위치하지 않아 True가 반환된다.
         """
-        req = requests.get(BASE_URL + '/item/board.nhn?code=' + code)
+        req = requests.get(BASE_URL + '/item/board.nhn?code=' + code, headers=HEADERS)
         page_soup = BeautifulSoup(req.text, 'lxml')
         web_latest_date = page_soup.select_one('tbody > tr:nth-of-type(3) > td:nth-of-type(1) > span')
         web_latest_date = pd.to_datetime(web_latest_date.text)
